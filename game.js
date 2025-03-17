@@ -41,14 +41,19 @@ function init() {
 }
 
 function preload() {
-    // Load assets
+    // Load assets with debug logging
+    console.log('Loading assets...');
+    
     this.load.image('background', 'assets/background.png');
     this.load.image('ground', 'assets/platform.png');
     this.load.image('treat', 'assets/treat.png');
-    this.load.spritesheet('cat', 'assets/cat_sprite.png', { 
-        frameWidth: 64, 
-        frameHeight: 64 
-    });
+    
+    // Load separate cat images instead of spritesheet
+    this.load.image('cat-idle', 'assets/cat-idle.png');
+    this.load.image('cat-walk1', 'assets/cat-walk1.png');
+    this.load.image('cat-walk2', 'assets/cat-walk2.png');
+    this.load.image('cat-walk3', 'assets/cat-walk3.png');
+    this.load.image('cat-jump', 'assets/cat-jump.png');
 }
 
 function create() {
@@ -108,11 +113,6 @@ function createGameElements() {
     platforms.create(50, 350, 'ground').setScale(1, 0.5).refreshBody(); // Lowered from 250
     platforms.create(750, 320, 'ground').setScale(1, 0.5).refreshBody(); // Lowered from 220
     
-    // Create player
-    player = this.physics.add.sprite(100, 100, 'cat');
-    player.setBounce(0.2);
-    player.setCollideWorldBounds(true);
-    
     // Create treats
     treats = this.physics.add.group({
         key: 'treat',
@@ -146,6 +146,37 @@ function createGameElements() {
     
     // Update debug text
     debugText.setText('Use Arrow Keys or WASD to move\nPress Up or W to jump');
+
+    // Create cat animations using separate frames
+    this.anims.create({
+        key: 'idle',
+        frames: [{ key: 'cat-idle' }],
+        frameRate: 10
+    });
+
+    this.anims.create({
+        key: 'walk',
+        frames: [
+            { key: 'cat-walk1' },
+            { key: 'cat-walk2' },
+            { key: 'cat-walk3' },
+            { key: 'cat-walk2' } // Use walk2 again for a smoother loop
+        ],
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'jump',
+        frames: [{ key: 'cat-jump' }],
+        frameRate: 1
+    });
+
+    // Create player with animations - start with idle frame
+    player = this.physics.add.sprite(100, 100, 'cat-idle');
+    player.setBounce(0.2);
+    player.setCollideWorldBounds(true);
+    player.play('idle');
 }
 
 function update() {
