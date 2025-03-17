@@ -14,7 +14,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 800 },
-            debug: true
+            debug: false
         }
     },
     scale: {
@@ -46,7 +46,6 @@ let highScore = 0;
 let scoreText;
 let highScoreText;
 let cursors;
-let debugText;
 let gameStarted = false;
 let isDead = false;
 const DEATH_Y = 550; // Y position where cat dies
@@ -88,24 +87,11 @@ function create() {
     // Add background
     this.add.image(400, 300, 'background');
     
-    // Initialize keyboard inputs multiple ways
+    // Initialize keyboard inputs
     cursors = this.input.keyboard.createCursorKeys();
     
     // Add WASD keys
     this.input.keyboard.addKeys('W,S,A,D');
-    
-    // Add keyboard event listeners
-    this.input.keyboard.on('keydown', function (event) {
-        console.log('Key pressed:', event.code);
-    });
-
-    // Add debug text at the top
-    debugText = this.add.text(16, 16, 'Click to start\nUse Arrow Keys or WASD to move', {
-        fontSize: '20px',
-        fill: '#000',
-        backgroundColor: '#ffffff80',
-        padding: { x: 10, y: 5 }
-    });
 
     // Create platforms group immediately
     platforms = this.physics.add.staticGroup();
@@ -210,7 +196,7 @@ function createGameElements() {
 
 function update() {
     if (!gameStarted || !player) return;
-    if (isDead) return; // Don't process input if dead
+    if (isDead) return;
 
     // Get keyboard state
     const leftKey = cursors.left.isDown || this.input.keyboard.addKey('A').isDown;
@@ -253,13 +239,6 @@ function update() {
     if (!player.body.touching.down) {
         player.play('jump', true);
     }
-
-    // Update debug display
-    debugText.setText(
-        `Score: ${score}\n` +
-        `X: ${Math.round(player.x)} Y: ${Math.round(player.y)}\n` +
-        `On Ground: ${player.body.touching.down}`
-    );
 }
 
 // Treat collection function
@@ -276,11 +255,6 @@ function collectTreat(player, treat) {
         });
     }
 }
-
-// Add keyboard event listeners for debugging
-document.addEventListener('keydown', function(event) {
-    console.log('Key pressed:', event.key);
-});
 
 // Add this new function for handling player death
 function killPlayer() {
