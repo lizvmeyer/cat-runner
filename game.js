@@ -103,18 +103,46 @@ function createGameElements() {
     let groundY = 550;
     platforms.create(400, groundY, 'ground').setScale(2, 0.5).refreshBody();
     
-    // Create platforms
+    // Create platforms - adjusted heights to be more reachable
     platforms.create(600, 400, 'ground').setScale(1, 0.5).refreshBody();
-    platforms.create(50, 250, 'ground').setScale(1, 0.5).refreshBody();
-    platforms.create(750, 220, 'ground').setScale(1, 0.5).refreshBody();
+    platforms.create(50, 350, 'ground').setScale(1, 0.5).refreshBody(); // Lowered from 250
+    platforms.create(750, 320, 'ground').setScale(1, 0.5).refreshBody(); // Lowered from 220
     
-    // Create player - MOVED MUCH HIGHER UP
-    player = this.physics.add.sprite(100, 100, 'cat'); // Changed Y from 300 to 100
+    // Create player
+    player = this.physics.add.sprite(100, 100, 'cat');
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
     
+    // Create treats
+    treats = this.physics.add.group({
+        key: 'treat',
+        repeat: 11,  // This creates 12 treats total
+        setXY: { 
+            x: 50,   // Start position
+            y: 0,    // Start at top
+            stepX: 70 // Space between treats
+        }
+    });
+    
+    // Make treats bounce a bit
+    treats.children.iterate(function (child) {
+        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+        child.setScale(0.5); // Make treats smaller if needed
+    });
+    
     // Set up collisions
     this.physics.add.collider(player, platforms);
+    this.physics.add.collider(treats, platforms);
+    
+    // Collect treats on overlap
+    this.physics.add.overlap(player, treats, collectTreat, null, this);
+    
+    // Add score text
+    scoreText = this.add.text(16, 16, 'Score: 0', { 
+        fontSize: '32px', 
+        fill: '#ff78a7',
+        fontFamily: 'Arial' 
+    });
     
     // Update debug text
     debugText.setText('Use Arrow Keys or WASD to move\nPress Up or W to jump');
@@ -130,36 +158,37 @@ function update() {
 
     // Update debug display
     debugText.setText(
-        `Left: ${leftKey} Right: ${rightKey} Up: ${upKey}\n` +
+        `Score: ${score}\n` +
         `X: ${Math.round(player.x)} Y: ${Math.round(player.y)}\n` +
-        `VelX: ${Math.round(player.body.velocity.x)} VelY: ${Math.round(player.body.velocity.y)}`
+        `On Ground: ${player.body.touching.down}`
     );
 
     // Movement
+    const moveSpeed = 200;
     if (leftKey) {
-        player.setVelocityX(-200);
-        console.log('Moving left');
+        player.setVelocityX(-moveSpeed);
     } else if (rightKey) {
-        player.setVelocityX(200);
-        console.log('Moving right');
+        player.setVelocityX(moveSpeed);
     } else {
         player.setVelocityX(0);
     }
 
-    // Jumping
+    // Jumping - increased jump force
+    const jumpForce = -550; // Increased from -400
     if (upKey && player.body.touching.down) {
-        player.setVelocityY(-400);
+        player.setVelocityY(jumpForce);
         console.log('Jumping');
     }
 }
 
+// Treat collection function
 function collectTreat(player, treat) {
     treat.disableBody(true, true);
     
     score += 10;
     scoreText.setText('Score: ' + score);
-    console.log('Treat collected! Score:', score);
     
+    // Optional: Respawn treats when all are collected
     if (treats.countActive(true) === 0) {
         treats.children.iterate(function (child) {
             child.enableBody(true, child.x, 0, true, true);
