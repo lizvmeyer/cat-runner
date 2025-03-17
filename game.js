@@ -50,6 +50,8 @@ let highScoreText;
 let cursors;
 let debugText;
 let gameStarted = false;
+let isDead = false;
+const DEATH_Y = 550; // Y position where cat dies
 
 function init() {
     // Initialize input system
@@ -200,15 +202,16 @@ function createGameElements() {
 
 function update() {
     if (!gameStarted || !player) return;
+    if (isDead) return; // Don't process input if dead
 
     // Get keyboard state
     const leftKey = cursors.left.isDown || this.input.keyboard.addKey('A').isDown;
     const rightKey = cursors.right.isDown || this.input.keyboard.addKey('D').isDown;
     const upKey = cursors.up.isDown || this.input.keyboard.addKey('W').isDown;
 
-    // Check for fall reset
-    if (player.y > 580) {
-        resetGame.call(this);
+    // Check for fall death
+    if (player.y > DEATH_Y && !isDead) {
+        killPlayer.call(this);
         return;
     }
 
@@ -269,4 +272,75 @@ function collectTreat(player, treat) {
 // Add keyboard event listeners for debugging
 document.addEventListener('keydown', function(event) {
     console.log('Key pressed:', event.key);
-}); 
+});
+
+// Add this new function for handling player death
+function killPlayer() {
+    isDead = true;
+    
+    // Stop player movement
+    player.setVelocity(0, 0);
+    player.play('idle');
+
+    // Create death animation (falling off screen)
+    this.tweens.add({
+        targets: player,
+        y: player.y + 100,
+        alpha: 0,
+        duration: 1000,
+        ease: 'Power1',
+        onComplete: () => {
+            // Show death message
+            const deathText = this.add.text(400, 300, 'Oh no! Cat fell!', {
+                fontSize: '32px',
+                fill: '#ff78a7',
+                backgroundColor: '#ffffff80',
+                padding: { x: 20, y: 10 }
+            }).setOrigin(0.5);
+
+            // Wait a moment before resetting
+            this.time.delayedCall(2000, () => {
+                deathText.destroy();
+                resetGame.call(this);
+            });
+        }
+    });
+}
+
+// Update the reset game function
+function resetGame() {
+    // Update high score
+    if (score > highScore) {
+        highScore = score;
+        highScoreText.setText(`High Score: ${highScore}`);
+    }
+
+    // Reset player
+    player.setPosition(100, 100);
+    player.setVelocity(0, 0);
+    player.setAlpha(1); // Reset visibility
+    player.play('idle');
+    isDead = false;
+
+    // Reset score
+    score = 0;
+    scoreText.setText('Score: 0');
+
+    // Respawn treats
+    treats.children.iterate(function (child) {
+        child.enableBody(true, child.x, 0, true, true);
+    });
+
+    // Show reset message
+    const resetText = this.add.text(400, 300, 'Try Again!', {
+        fontSize: '32px',
+        fill: '#ff78a7',
+        backgroundColor: '#ffffff80',
+        padding: { x: 20, y: 10 }
+    }).setOrigin(0.5);
+
+    // Remove the message after 2 seconds
+    this.time.delayedCall(2000, () => {
+        resetText.destroy();
+    });
+} 
