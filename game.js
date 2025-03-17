@@ -7,16 +7,18 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 800 },
-            debug: true // Enable physics debugging
+            debug: true
         }
     },
+    input: {
+        keyboard: true,
+        gamepad: false
+    },
     scene: {
+        init: init,
         preload: preload,
         create: create,
         update: update
-    },
-    input: {
-        keyboard: true // Explicitly enable keyboard input
     }
 };
 
@@ -33,6 +35,11 @@ let cursors;
 let debugText;
 let gameStarted = false;
 
+function init() {
+    // Initialize input system
+    console.log('Game initializing...');
+}
+
 function preload() {
     // Load assets
     this.load.image('background', 'assets/background.png');
@@ -45,138 +52,104 @@ function preload() {
 }
 
 function create() {
+    console.log('Creating game elements...');
+    
     // Add background
     this.add.image(400, 300, 'background');
     
-    // Create platforms group
+    // Initialize keyboard inputs multiple ways
+    cursors = this.input.keyboard.createCursorKeys();
+    
+    // Add WASD keys
+    this.input.keyboard.addKeys('W,S,A,D');
+    
+    // Add keyboard event listeners
+    this.input.keyboard.on('keydown', function (event) {
+        console.log('Key pressed:', event.code);
+    });
+
+    // Add debug text at the top
+    debugText = this.add.text(16, 16, 'Click to start\nUse Arrow Keys or WASD to move', {
+        fontSize: '20px',
+        fill: '#000',
+        backgroundColor: '#ffffff80',
+        padding: { x: 10, y: 5 }
+    });
+
+    // Create a start button
+    const startButton = this.add.text(400, 300, 'Click to Start', {
+        fontSize: '32px',
+        fill: '#fff',
+        backgroundColor: '#000',
+        padding: { x: 20, y: 10 }
+    })
+    .setOrigin(0.5)
+    .setInteractive()
+    .on('pointerdown', () => {
+        console.log('Game started');
+        startButton.destroy();
+        createGameElements.call(this);
+        gameStarted = true;
+    });
+}
+
+function createGameElements() {
+    console.log('Setting up game elements...');
+    
+    // Create platforms
     platforms = this.physics.add.staticGroup();
     
-    // Create ground - adjust position and size to match visible ground
-    let groundY = 550; // Move ground up
-    let ground = platforms.create(400, groundY, 'ground');
-    ground.setScale(2, 0.5); // Adjust scale to match visible platform
-    ground.refreshBody(); // Important: refresh physics body after scaling
+    // Create ground
+    let groundY = 550;
+    platforms.create(400, groundY, 'ground').setScale(2, 0.5).refreshBody();
     
-    // Create platforms - adjust positions to match visible platforms
+    // Create platforms
     platforms.create(600, 400, 'ground').setScale(1, 0.5).refreshBody();
     platforms.create(50, 250, 'ground').setScale(1, 0.5).refreshBody();
     platforms.create(750, 220, 'ground').setScale(1, 0.5).refreshBody();
     
-    // Create player - spawn above ground
-    player = this.physics.add.sprite(100, groundY - 100, 'cat');
+    // Create player
+    player = this.physics.add.sprite(100, 300, 'cat');
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
     
-    // Adjust player collision box if needed
-    player.body.setSize(48, 48); // Make collision box slightly smaller than sprite
-    player.body.setOffset(8, 8); // Center the collision box
-    
-    // Player animations
-    this.anims.create({
-        key: 'left',
-        frames: this.anims.generateFrameNumbers('cat', { start: 0, end: 3 }),
-        frameRate: 10,
-        repeat: -1
-    });
-    
-    this.anims.create({
-        key: 'turn',
-        frames: [ { key: 'cat', frame: 4 } ],
-        frameRate: 20
-    });
-    
-    this.anims.create({
-        key: 'right',
-        frames: this.anims.generateFrameNumbers('cat', { start: 5, end: 8 }),
-        frameRate: 10,
-        repeat: -1
-    });
-    
-    // Create treats
-    treats = this.physics.add.group({
-        key: 'treat',
-        repeat: 11,
-        setXY: { x: 12, y: 0, stepX: 70 }
-    });
-    
-    treats.children.iterate(function (child) {
-        child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
-    });
-    
     // Set up collisions
     this.physics.add.collider(player, platforms);
-    this.physics.add.collider(treats, platforms);
     
-    // Collect treats on overlap
-    this.physics.add.overlap(player, treats, collectTreat, null, this);
-    
-    // Score display
-    scoreText = this.add.text(16, 16, 'Score: 0', { 
-        fontSize: '32px', 
-        fill: '#ff78a7',
-        fontFamily: 'Arial' 
-    });
-    
-    // Debug text
-    debugText = this.add.text(16, 50, 'Debug Info', { 
-        fontSize: '18px', 
-        fill: '#000' 
-    });
-
-    // Input controls
-    cursors = this.input.keyboard.createCursorKeys();
-    
-    // Log that creation is complete
-    console.log('Game creation complete');
-    console.log('Cursors initialized:', cursors);
-
-    // Make sure physics collision is working
-    this.physics.world.setBounds(0, 0, 800, 600);
-    this.physics.world.gravity.y = 1000; // Increase gravity slightly
+    // Update debug text
+    debugText.setText('Use Arrow Keys or WASD to move\nPress Up or W to jump');
 }
 
 function update() {
-    if (!gameStarted) return;
+    if (!gameStarted || !player) return;
 
-    // Update debug info
+    // Get keyboard state
+    const leftKey = cursors.left.isDown || this.input.keyboard.addKey('A').isDown;
+    const rightKey = cursors.right.isDown || this.input.keyboard.addKey('D').isDown;
+    const upKey = cursors.up.isDown || this.input.keyboard.addKey('W').isDown;
+
+    // Update debug display
     debugText.setText(
-        `Player X: ${player ? Math.round(player.x) : 'N/A'} Y: ${player ? Math.round(player.y) : 'N/A'}\n` +
-        `Velocity X: ${player ? Math.round(player.body.velocity.x) : 'N/A'} Y: ${player ? Math.round(player.body.velocity.y) : 'N/A'}\n` +
-        `On Ground: ${player ? player.body.touching.down : 'N/A'}\n` +
-        `Left Key: ${cursors.left.isDown}\n` +
-        `Right Key: ${cursors.right.isDown}\n` +
-        `Up Key: ${cursors.up.isDown}`
+        `Left: ${leftKey} Right: ${rightKey} Up: ${upKey}\n` +
+        `X: ${Math.round(player.x)} Y: ${Math.round(player.y)}\n` +
+        `VelX: ${Math.round(player.body.velocity.x)} VelY: ${Math.round(player.body.velocity.y)}`
     );
 
-    // Player movement with better controls
-    const moveSpeed = 200;
-    const jumpForce = -400;
-
-    // Horizontal movement
-    if (cursors.left.isDown) {
-        player.setVelocityX(-moveSpeed);
-        player.anims.play('left', true);
-    } else if (cursors.right.isDown) {
-        player.setVelocityX(moveSpeed);
-        player.anims.play('right', true);
+    // Movement
+    if (leftKey) {
+        player.setVelocityX(-200);
+        console.log('Moving left');
+    } else if (rightKey) {
+        player.setVelocityX(200);
+        console.log('Moving right');
     } else {
-        // Add some deceleration
-        player.setVelocityX(player.body.velocity.x * 0.8);
-        if (Math.abs(player.body.velocity.x) < 10) {
-            player.setVelocityX(0);
-        }
-        player.anims.play('turn');
-    }
-    
-    // Jumping - make it more responsive
-    if (cursors.up.isDown && player.body.touching.down) {
-        player.setVelocityY(jumpForce);
-        console.log('Jump executed!');
+        player.setVelocityX(0);
     }
 
-    // Add a small vertical velocity check to prevent floating
-    if (!player.body.touching.down && player.body.velocity.y < 15) {
-        player.setVelocityY(player.body.velocity.y + 15);
+    // Jumping
+    if (upKey && player.body.touching.down) {
+        player.setVelocityY(-400);
+        console.log('Jumping');
     }
 }
 
