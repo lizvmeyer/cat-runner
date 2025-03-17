@@ -31,6 +31,7 @@ let score = 0;
 let scoreText;
 let cursors;
 let debugText;
+let gameStarted = false;
 
 function preload() {
     // Load assets
@@ -50,18 +51,25 @@ function create() {
     // Create platforms group
     platforms = this.physics.add.staticGroup();
     
-    // Create ground
-    platforms.create(400, 580, 'ground').setScale(2).refreshBody();
+    // Create ground - adjust position and size to match visible ground
+    let groundY = 550; // Move ground up
+    let ground = platforms.create(400, groundY, 'ground');
+    ground.setScale(2, 0.5); // Adjust scale to match visible platform
+    ground.refreshBody(); // Important: refresh physics body after scaling
     
-    // Create some platforms
-    platforms.create(600, 400, 'ground');
-    platforms.create(50, 250, 'ground');
-    platforms.create(750, 220, 'ground');
+    // Create platforms - adjust positions to match visible platforms
+    platforms.create(600, 400, 'ground').setScale(1, 0.5).refreshBody();
+    platforms.create(50, 250, 'ground').setScale(1, 0.5).refreshBody();
+    platforms.create(750, 220, 'ground').setScale(1, 0.5).refreshBody();
     
-    // Create player
-    player = this.physics.add.sprite(100, 300, 'cat');
+    // Create player - spawn above ground
+    player = this.physics.add.sprite(100, groundY - 100, 'cat');
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
+    
+    // Adjust player collision box if needed
+    player.body.setSize(48, 48); // Make collision box slightly smaller than sprite
+    player.body.setOffset(8, 8); // Center the collision box
     
     // Player animations
     this.anims.create({
@@ -121,37 +129,54 @@ function create() {
     // Log that creation is complete
     console.log('Game creation complete');
     console.log('Cursors initialized:', cursors);
+
+    // Make sure physics collision is working
+    this.physics.world.setBounds(0, 0, 800, 600);
+    this.physics.world.gravity.y = 1000; // Increase gravity slightly
 }
 
 function update() {
-    // Update debug text
+    if (!gameStarted) return;
+
+    // Update debug info
     debugText.setText(
-        `Player X: ${Math.round(player.x)} Y: ${Math.round(player.y)}\n` +
-        `Velocity X: ${Math.round(player.body.velocity.x)} Y: ${Math.round(player.body.velocity.y)}\n` +
-        `On Ground: ${player.body.touching.down}\n` +
+        `Player X: ${player ? Math.round(player.x) : 'N/A'} Y: ${player ? Math.round(player.y) : 'N/A'}\n` +
+        `Velocity X: ${player ? Math.round(player.body.velocity.x) : 'N/A'} Y: ${player ? Math.round(player.body.velocity.y) : 'N/A'}\n` +
+        `On Ground: ${player ? player.body.touching.down : 'N/A'}\n` +
         `Left Key: ${cursors.left.isDown}\n` +
         `Right Key: ${cursors.right.isDown}\n` +
         `Up Key: ${cursors.up.isDown}`
     );
 
-    // Player movement with console logging
+    // Player movement with better controls
+    const moveSpeed = 200;
+    const jumpForce = -400;
+
+    // Horizontal movement
     if (cursors.left.isDown) {
-        player.setVelocityX(-260);
+        player.setVelocityX(-moveSpeed);
         player.anims.play('left', true);
-        console.log('Moving left');
     } else if (cursors.right.isDown) {
-        player.setVelocityX(260);
+        player.setVelocityX(moveSpeed);
         player.anims.play('right', true);
-        console.log('Moving right');
     } else {
-        player.setVelocityX(0);
+        // Add some deceleration
+        player.setVelocityX(player.body.velocity.x * 0.8);
+        if (Math.abs(player.body.velocity.x) < 10) {
+            player.setVelocityX(0);
+        }
         player.anims.play('turn');
     }
     
-    // Jump when up arrow pressed and player is on ground
+    // Jumping - make it more responsive
     if (cursors.up.isDown && player.body.touching.down) {
-        player.setVelocityY(-500);
-        console.log('Jumping');
+        player.setVelocityY(jumpForce);
+        console.log('Jump executed!');
+    }
+
+    // Add a small vertical velocity check to prevent floating
+    if (!player.body.touching.down && player.body.velocity.y < 15) {
+        player.setVelocityY(player.body.velocity.y + 15);
     }
 }
 
