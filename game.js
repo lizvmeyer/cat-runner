@@ -59,7 +59,7 @@ function create() {
     platforms.create(750, 220, 'ground');
     
     // Create player
-    player = this.physics.add.sprite(100, 450, 'cat');
+    player = this.physics.add.sprite(100, 300, 'cat');
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
     
@@ -172,4 +172,4 @@ function collectTreat(player, treat) {
 // Add keyboard event listeners for debugging
 document.addEventListener('keydown', function(event) {
     console.log('Key pressed:', event.key);
-});
+}); 
