@@ -273,7 +273,7 @@ function killPlayer() {
         ease: 'Power1',
         onComplete: () => {
             // Show death message
-            const deathText = this.add.text(400, 300, 'Oh no! Cat fell!', {
+            const deathText = this.add.text(400, 300, 'Whoops! You fell! :( ', {
                 fontSize: '32px',
                 fill: '#ff78a7',
                 backgroundColor: '#ffffff80',
