@@ -108,8 +108,8 @@ function createGameElements() {
     platforms.create(50, 250, 'ground').setScale(1, 0.5).refreshBody();
     platforms.create(750, 220, 'ground').setScale(1, 0.5).refreshBody();
     
-    // Create player
-    player = this.physics.add.sprite(100, 300, 'cat');
+    // Create player - MOVED MUCH HIGHER UP
+    player = this.physics.add.sprite(100, 100, 'cat'); // Changed Y from 300 to 100
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
     
