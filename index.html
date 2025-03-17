@@ -11,6 +11,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            overflow: hidden; /* Prevent scrolling */
         }
         canvas {
             border: 4px solid #ffacc5;
@@ -21,5 +22,22 @@
 </head>
 <body>
     <script src="game.js"></script>
+    <script>
+        // Ensure the game canvas gets focus
+        window.addEventListener('load', () => {
+            console.log('Page loaded');
+            // Focus the game canvas
+            const canvas = document.querySelector('canvas');
+            if (canvas) {
+                canvas.focus();
+                console.log('Canvas focused');
+            }
+            
+            // Add global keyboard listener
+            window.addEventListener('keydown', (e) => {
+                console.log('Key pressed:', e.code);
+            });
+        });
+    </script>
 </body>
 </html> 
