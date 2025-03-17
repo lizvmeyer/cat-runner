@@ -6,7 +6,9 @@ const config = {
     backgroundColor: '#ffd6e0',
     render: {
         pixelArt: true,
-        antialias: false
+        antialias: false,
+        powerPreference: 'high-performance',
+        willReadFrequently: true
     },
     physics: {
         default: 'arcade',
@@ -18,6 +20,9 @@ const config = {
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
+    },
+    audio: {
+        disableWebAudio: true // Use HTML5 Audio instead
     },
     input: {
         keyboard: true,
@@ -31,18 +36,11 @@ const config = {
     }
 };
 
-// Initialize game with error handling
-try {
-    const game = new Phaser.Game(config);
-    console.log('Game initialized successfully');
-} catch (error) {
-    console.error('Error initializing game:', error);
-}
-
 // Global variables
-let player = null;
-let platforms = null;
-let treats = null;
+let game;
+let player;
+let platforms;
+let treats;
 let score = 0;
 let highScore = 0;
 let scoreText;
@@ -52,6 +50,16 @@ let debugText;
 let gameStarted = false;
 let isDead = false;
 const DEATH_Y = 550; // Y position where cat dies
+
+// Initialize game with error handling
+window.onload = function() {
+    try {
+        game = new Phaser.Game(config);
+        console.log('Game initialized successfully');
+    } catch (error) {
+        console.error('Error initializing game:', error);
+    }
+};
 
 function init() {
     // Initialize input system
