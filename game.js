@@ -7,13 +7,16 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 800 },
-            debug: false
+            debug: true // Enable physics debugging
         }
     },
     scene: {
         preload: preload,
         create: create,
         update: update
+    },
+    input: {
+        keyboard: true // Explicitly enable keyboard input
     }
 };
 
@@ -27,6 +30,7 @@ let treats;
 let score = 0;
 let scoreText;
 let cursors;
+let debugText;
 
 function preload() {
     // Load assets
@@ -102,21 +106,43 @@ function create() {
     scoreText = this.add.text(16, 16, 'Score: 0', { 
         fontSize: '32px', 
         fill: '#ff78a7',
-        fontFamily: 'Arial Rounded MT Bold' 
+        fontFamily: 'Arial' 
     });
     
+    // Debug text
+    debugText = this.add.text(16, 50, 'Debug Info', { 
+        fontSize: '18px', 
+        fill: '#000' 
+    });
+
     // Input controls
     cursors = this.input.keyboard.createCursorKeys();
+    
+    // Log that creation is complete
+    console.log('Game creation complete');
+    console.log('Cursors initialized:', cursors);
 }
 
 function update() {
-    // Player movement
+    // Update debug text
+    debugText.setText(
+        `Player X: ${Math.round(player.x)} Y: ${Math.round(player.y)}\n` +
+        `Velocity X: ${Math.round(player.body.velocity.x)} Y: ${Math.round(player.body.velocity.y)}\n` +
+        `On Ground: ${player.body.touching.down}\n` +
+        `Left Key: ${cursors.left.isDown}\n` +
+        `Right Key: ${cursors.right.isDown}\n` +
+        `Up Key: ${cursors.up.isDown}`
+    );
+
+    // Player movement with console logging
     if (cursors.left.isDown) {
         player.setVelocityX(-260);
         player.anims.play('left', true);
+        console.log('Moving left');
     } else if (cursors.right.isDown) {
         player.setVelocityX(260);
         player.anims.play('right', true);
+        console.log('Moving right');
     } else {
         player.setVelocityX(0);
         player.anims.play('turn');
@@ -125,24 +151,25 @@ function update() {
     // Jump when up arrow pressed and player is on ground
     if (cursors.up.isDown && player.body.touching.down) {
         player.setVelocityY(-500);
+        console.log('Jumping');
     }
 }
 
 function collectTreat(player, treat) {
     treat.disableBody(true, true);
     
-    // Update score
     score += 10;
     scoreText.setText('Score: ' + score);
+    console.log('Treat collected! Score:', score);
     
-    // Play collect sound (if we had one)
-    // this.sound.play('collect');
-    
-    // Check if all treats are collected
     if (treats.countActive(true) === 0) {
-        // Respawn treats
         treats.children.iterate(function (child) {
             child.enableBody(true, child.x, 0, true, true);
         });
     }
 }
+
+// Add keyboard event listeners for debugging
+document.addEventListener('keydown', function(event) {
+    console.log('Key pressed:', event.key);
+});
