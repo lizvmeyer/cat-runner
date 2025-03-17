@@ -124,7 +124,7 @@ function createGameElements() {
     // Create ground and platforms
     const groundY = 550;
     platforms.create(400, groundY, 'ground').setScale(2, 0.5).refreshBody();
-    platforms.create(600, 400, 'ground').setScale(1, 0.5).refreshBody();
+    platforms.create(550, 400, 'ground').setScale(1, 0.5).refreshBody();
     platforms.create(50, 350, 'ground').setScale(1, 0.5).refreshBody();
     platforms.create(750, 320, 'ground').setScale(1, 0.5).refreshBody();
 
