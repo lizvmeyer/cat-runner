@@ -1,25 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Cat Runner</title>
+    <title>Geometric Shape Generator</title>
     <style>
         body {
-            margin: 0;
-            background-color: #ffd6e0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        .controls {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
         canvas {
-            border: 4px solid #ffacc5;
-            border-radius: 10px;
+            border: 1px solid #ccc;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
 </head>
 <body>
-    <script src="game.js"></script>
+    <h1>Geometric Shape Generator</h1>
+    <div class="controls">
+        <select id="shapeType">
+            <option value="polygon">Regular Polygon</option>
+            <option value="star">Star</option>
+            <option value="spiral">Spiral</option>
+        </select>
+        <input type="number" id="sides" value="6" min="3" max="12" />
+        <input type="color" id="shapeColor" value="#000000" />
+        <button onclick="drawShape()">Draw</button>
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+    </div>
+    <canvas id="canvas" width="500" height="500"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        function drawShape() {
+            const shapeType = document.getElementById('shapeType').value;
+            const sides = parseInt(document.getElementById('sides').value);
+            const color = document.getElementById('shapeColor').value;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            
+            if (shapeType === 'polygon') {
+                drawPolygon(sides);
+            } else if (shapeType === 'star') {
+                drawStar(sides);
+            } else if (shapeType === 'spiral') {
+                drawSpiral();
+            }
+            
+            ctx.stroke();
+        }
+        
+        function drawPolygon(sides) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 100;
+            
+            ctx.moveTo(centerX + radius, centerY);
+            
+            for (let i = 1; i <= sides; i++) {
+                const angle = (i * 2 * Math.PI) / sides;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+        }
+        
+        function drawStar(points) {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const outerRadius = 100;
+            const innerRadius = 50;
+            
+            ctx.moveTo(centerX + outerRadius, centerY);
+            
+            for (let i = 0; i < points * 2; i++) {
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const angle = (i * Math.PI) / points;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+        }
+        
+        function drawSpiral() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const turns = 5;
+            
+            ctx.moveTo(centerX, centerY);
+            
+            for (let angle = 0; angle < turns * 2 * Math.PI; angle += 0.1) {
+                const radius = angle * 10;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                ctx.lineTo(x, y);
+            }
+        }
+        
+        function exportSVG() {
+            // Create SVG element
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', canvas.width);
+            svg.setAttribute('height', canvas.height);
+            
+            // Get canvas data and convert to SVG path
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('stroke', document.getElementById('shapeColor').value);
+            path.setAttribute('fill', 'none');
+            
+            // Create download link
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const blob = new Blob([svgData], {type: 'image/svg+xml'});
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'shape.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function exportPNG() {
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = 'shape.png';
+            a.click();
+        }
+        
+        // Initial draw
+        drawShape();
+
+        // Add this to ensure the game canvas gets focus
+        window.addEventListener('load', function() {
+            // Focus the game canvas
+            const canvas = document.querySelector('canvas');
+            if (canvas) {
+                canvas.focus();
+                console.log('Canvas focused');
+            }
+            
+            // Log key events on the window
+            window.addEventListener('keydown', function(e) {
+                console.log('Key pressed on window:', e.code);
+            });
+        });
+    </script>
 </body>
-</html>
+</html> 
