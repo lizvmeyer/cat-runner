@@ -3,6 +3,9 @@ const config = {
     type: Phaser.AUTO,
     width: 800,
     height: 600,
+    canvas: {
+        willReadFrequently: true
+    },
     physics: {
         default: 'arcade',
         arcade: {
@@ -30,7 +33,9 @@ let player;
 let platforms;
 let treats;
 let score = 0;
+let highScore = 0;
 let scoreText;
+let highScoreText;
 let cursors;
 let debugText;
 let gameStarted = false;
