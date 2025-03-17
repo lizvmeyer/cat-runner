@@ -1,10 +1,12 @@
 // Game configuration
 const config = {
-    type: Phaser.AUTO,
+    type: Phaser.CANVAS,
     width: 800,
     height: 600,
-    canvas: {
-        willReadFrequently: true
+    backgroundColor: '#ffd6e0',
+    render: {
+        pixelArt: true,
+        antialias: false
     },
     physics: {
         default: 'arcade',
@@ -12,6 +14,10 @@ const config = {
             gravity: { y: 800 },
             debug: true
         }
+    },
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
     },
     input: {
         keyboard: true,
@@ -25,8 +31,13 @@ const config = {
     }
 };
 
-// Initialize game
-let game = new Phaser.Game(config);
+// Initialize game with error handling
+try {
+    const game = new Phaser.Game(config);
+    console.log('Game initialized successfully');
+} catch (error) {
+    console.error('Error initializing game:', error);
+}
 
 // Global variables
 let player = null;
